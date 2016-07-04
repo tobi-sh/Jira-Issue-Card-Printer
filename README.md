@@ -1,5 +1,5 @@
 # Issue-Tracker-Card-Printer 
-formerly kown as Jira-Issue-Card-Printer
+###### formerly kown as Jira-Issue-Card-Printer
 
 Beautiful Issue Tracker Card Printer
 
