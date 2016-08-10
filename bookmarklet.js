@@ -6,8 +6,8 @@
   // YouTrack: http://qoomon.myjetbrains.com/youtrack/dashboard
 
   var global = {};
-  global.version = "4.4.2";
-  global.issueTrackingUrl = "github.com/qoomon/Jira-Issue-Card-Printer";
+  global.version = "4.4.3";
+  global.issueTrackingUrl = "github.com/tobi-sh/Jira-Issue-Card-Printer";
 
   global.isDev = document.currentScript == null;
 
@@ -28,17 +28,15 @@
   function main() {
     var promises = [];
 
-    ga('send', 'pageview');
-
     //preconditions
     if ($("#card-printer-iframe").length > 0) {
       closePrintPreview();
     }
 
-    console.log("Run...")
+    
     for (issueTracker of getIssueTrackers()) {
       if(issueTracker.isEligible()){
-        console.log("Issue Tracker: " + issueTracker.name);
+        
         global.appFunctions = issueTracker;
         break;
       }
@@ -103,15 +101,11 @@
   function init() {
     var promises = [];
 
-    console.log("Init...")
-    initGoogleAnalytics();
-
     addStringFunctions();
     loadSettings();
 
     global.hostOrigin = "https://qoomon.github.io/Jira-Issue-Card-Printer/";
     if (global.isDev) {
-      console.log("DEVELOPMENT");
       global.hostOrigin = "https://rawgit.com/qoomon/Jira-Issue-Card-Printer/develop/";
     }
     global.resourceOrigin = global.hostOrigin + "resources/";
@@ -140,8 +134,7 @@
   function handleError(error){
     error = error2object(error);
     var error = JSON.stringify(error,2,2);
-    console.log("ERROR " + error);
-    ga('send', 'exception', { 'exDescription': error, 'exFatal': true });
+    
     alert("Sorry something went wrong\n\nPlease create an issue with following details at\n" + global.issueTrackingUrl + "\n\n" + error);
   }
 
@@ -172,7 +165,7 @@
   }
 
   function print() {
-    ga('send', 'event', 'button', 'click', 'print', $(".card", global.printFrame.contentWindow.document).length);
+    
     global.printFrame.contentWindow.print();
   }
 
@@ -221,8 +214,6 @@
     $("body", printFrameDocument).append("<div id='preload'/>");
     $("#preload", printFrameDocument).append("<div class='zigzag'/>");
 
-    console.log("load " + issueKeyList.length + " issues...");
-
     $.each(issueKeyList, function(index, issueKey) {
       var card = cardElement(issueKey);
       card.attr("index", index);
@@ -230,16 +221,13 @@
       $("body", printFrameDocument).append(card);
 
       promises.push(global.appFunctions.getCardData(issueKey).then(function(cardData) {
-        // console.log("cardData: " + JSON.stringify(cardData,2,2));
-        ga('send', 'event', 'card', 'generate', cardData.type);
+        
         fillCard(card, cardData);
         redrawCards();
       }));
     });
 
-    console.log("wait for issues loaded...");
     return Promise.all(promises).then(function() {
-      console.log("...all issues loaded.");
       redrawCards();
     });
   }
@@ -658,15 +646,11 @@
       module.getIssueData = function(issueKey) {
         //https://docs.atlassian.com/jira/REST/latest/
         var url = '/rest/api/2/issue/' + issueKey + '?expand=renderedFields,names';
-        console.log("IssueUrl: " + url);
-        //console.log("Issue: " + issueKey + " Loading...");
         return httpGetJSON(url).then(function(responseData) {
-          //console.log("Issue: " + issueKey + " Loaded!");
           // add custom fields with field names
           $.each(responseData.names, function(key, value) {
             if (key.startsWith("customfield_")) {
               var fieldName = value.toCamelCase();
-              //console.log("add new field: " + fieldName + " with value from " + key);
               responseData.fields[fieldName] = responseData.fields[key];
             }
           });
@@ -729,14 +713,11 @@
 
       module.getIssueData = function(issueKey) {
         var url = '/youtrack/rest/issue/' + issueKey + '?';
-        console.log("IssueUrl: " + url);
-        //console.log("Issue: " + issueKey + " Loading...");
+        
         return httpGetJSON(url).then(function(responseData) {
-          //console.log("Issue: " + issueKey + " Loaded!");
           $.each(responseData.field, function(key, value) {
             // add fields with field names
             var fieldName = value.name.toCamelCase();
-            //console.log("add new field: " + newFieldId + " with value from " + fieldName);
             responseData.field[fieldName] = value.value;
           });
           return responseData;
@@ -808,8 +789,6 @@
       module.getIssueData = function(issueKey) {
         //http://www.pivotaltracker.com/help/api
         var url = 'https://www.pivotaltracker.com/services/v5/stories/' + issueKey + "?fields=name,kind,description,story_type,owned_by(name),comments(file_attachments(kind)),estimate,deadline";
-        console.log("IssueUrl: " + url);
-        //console.log("Issue: " + issueKey + " Loading...");
         return httpGetJSON(url);
       };
 
@@ -864,8 +843,6 @@
 
       module.getIssueData = function(issueKey) {
         var url = "/1/cards/" + issueKey + "?members=true";
-        console.log("IssueUrl: " + url);
-        //console.log("Issue: " + issueKey + " Loading...");
         return httpGetJSON(url);
       };
 
@@ -937,8 +914,6 @@
         var project = issueKeySplit[0];
         var number = issueKeySplit[1];
         var url = "/api/v2/projects/" + project + "/cards/" + number + ".xml";
-        console.log("IssueUrl: " + url);
-        //console.log("Issue: " + issueKey + " Loading...");
         return httpGet(url);
       };
 
@@ -948,38 +923,6 @@
 
     return issueTrackers;
   }
-
-  //############################################################################################################################
-  //############################################################################################################################
-  //############################################################################################################################
-
-  function initGoogleAnalytics() {
-    if (global.isDev) {
-      this.ga = function(){ console.log("GoogleAnalytics: " + Object.keys(arguments).map(key => arguments[key]))}
-      return;
-    }
-    // <GoogleAnalytics>
-    (function(i, s, o, g, r, a, m) {
-      i['GoogleAnalyticsObject'] = r;
-      i[r] = i[r] || function() {
-        (i[r].q = i[r].q || []).push(arguments)
-      }, i[r].l = 1 * new Date();
-      a = s.createElement(o),
-        m = s.getElementsByTagName(o)[0];
-      a.async = 1;
-      a.src = g;
-      m.parentNode.insertBefore(a, m)
-    })(window, document, 'script', '//www.google-analytics.com/analytics.js', 'ga');
-
-    ga('create', 'UA-50840116-3', {
-      'alwaysSendReferrer': true
-    });
-    ga('set', 'page', '/cardprinter');
-  }
-
-  //############################################################################################################################
-  //############################################################################################################################
-  //############################################################################################################################
 
   function parseBool(text, def){
     if(text == 'true') return true;
