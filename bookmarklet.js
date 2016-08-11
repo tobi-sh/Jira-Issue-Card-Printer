@@ -1332,7 +1332,7 @@
      }
      .issue-icon[type="test"] {
        background-color: ORANGE;
-       background-image: url(https://qoomon.github.io/Jira-Issue-Card-Printer/resources/icons/CrashDummy.png);
+       background-image: url(https://tobi-sh.github.io/Jira-Issue-Card-Printer/resources/icons/CrashDummy.png);
      }
      .issue-estimate {
        position: absolute;
