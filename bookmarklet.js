@@ -13,6 +13,7 @@
   }
 
   var global = {};
+
   global.version = "4.6.2";
   global.issueTrackingUrl = "github.com/qoomon/Jira-Issue-Card-Printer";
 
@@ -37,17 +38,15 @@
   function main() {
     var promises = [];
 
-    ga('send', 'pageview');
-
     //preconditions
     if ($("#card-printer-iframe").length > 0) {
       closePrintPreview();
     }
 
-    console.log("Run...")
+    
     for (issueTracker of getIssueTrackers()) {
       if(issueTracker.isEligible()){
-        console.log("Issue Tracker: " + issueTracker.name);
+        
         global.appFunctions = issueTracker;
         break;
       }
@@ -112,25 +111,21 @@
   function init() {
     var promises = [];
 
-    console.log("Init...")
-    initGoogleAnalytics();
-
     addStringFunctions();
     loadSettings();
 
-    global.hostOrigin = "https://qoomon.github.io/Jira-Issue-Card-Printer/";
+    global.hostOrigin = "https://tobi-sh.github.io/Jira-Issue-Card-Printer/";
     if (global.isDev) {
-      console.log("DEVELOPMENT");
-      global.hostOrigin = "https://rawgit.com/qoomon/Jira-Issue-Card-Printer/develop/";
+      global.hostOrigin = "https://rawgit.com/tobi-sh/Jira-Issue-Card-Printer/develop/";
     }
     global.resourceOrigin = global.hostOrigin + "resources/";
 
     var resources = getResources();
 
     global.cardHtml = resources.cardHtml;
-    global.cardCss = resources.cardCss.replace(/https:\/\/qoomon.github.io\/Jira-Issue-Card-Printer\/resources/g, global.resourceOrigin);
+    global.cardCss = resources.cardCss.replace(/https:\/\/tobi-sh.github.io\/Jira-Issue-Card-Printer\/resources/g, global.resourceOrigin);
     global.printPreviewHtml = resources.printPreviewHtml;
-    global.printPreviewCss = resources.printPreviewCss.replace(/https:\/\/qoomon.github.io\/Jira-Issue-Card-Printer\/resources/g, global.resourceOrigin);
+    global.printPreviewCss = resources.printPreviewCss.replace(/https:\/\/tobi-sh.github.io\/Jira-Issue-Card-Printer\/resources/g, global.resourceOrigin);
 
     return Promise.all(promises);
   }
@@ -149,8 +144,7 @@
   function handleError(error){
     error = error2object(error);
     var error = JSON.stringify(error,2,2);
-    console.log("ERROR " + error);
-    ga('send', 'exception', { 'exDescription': error, 'exFatal': true });
+    
     alert("Sorry something went wrong\n\nPlease create an issue with following details at\n" + global.issueTrackingUrl + "\n\n" + error);
   }
 
@@ -183,7 +177,7 @@
   }
 
   function print() {
-    ga('send', 'event', 'button', 'click', 'print', $(".card", global.printFrame.contentWindow.document).length);
+    
     global.printFrame.contentWindow.print();
   }
 
@@ -233,8 +227,6 @@
     $("body", printFrameDocument).append("<div id='preload'/>");
     $("#preload", printFrameDocument).append("<div class='zigzag'/>");
 
-    console.log("load " + issueKeyList.length + " issues...");
-
     $.each(issueKeyList, function(index, issueKey) {
       var card = cardElement(issueKey);
       card.attr("index", index);
@@ -242,16 +234,13 @@
       $("body", printFrameDocument).append(card);
 
       promises.push(global.appFunctions.getCardData(issueKey).then(function(cardData) {
-        // console.log("cardData: " + JSON.stringify(cardData,2,2));
-        ga('send', 'event', 'card', 'generate', cardData.type);
+        
         fillCard(card, cardData);
         redrawCards();
       }));
     });
 
-    console.log("wait for issues loaded...");
     return Promise.all(promises).then(function() {
-      console.log("...all issues loaded.");
       redrawCards();
     });
   }
@@ -697,15 +686,11 @@
       module.getIssueData = function(issueKey) {
         //https://docs.atlassian.com/jira/REST/latest/
         var url = module.baseUrl() + '/rest/api/2/issue/' + issueKey + '?expand=renderedFields,names';
-        console.log("IssueUrl: " + url);
-        //console.log("Issue: " + issueKey + " Loading...");
         return httpGetJSON(url).then(function(responseData) {
-          //console.log("Issue: " + issueKey + " Loaded!");
           // add custom fields with field names
           $.each(responseData.names, function(key, value) {
             if (key.startsWith("customfield_")) {
               var fieldName = value.toCamelCase();
-              //console.log("add new field: " + fieldName + " with value from " + key);
               responseData.fields[fieldName] = responseData.fields[key];
             }
           });
@@ -768,14 +753,11 @@
 
       module.getIssueData = function(issueKey) {
         var url = '/youtrack/rest/issue/' + issueKey + '?';
-        console.log("IssueUrl: " + url);
-        //console.log("Issue: " + issueKey + " Loading...");
+        
         return httpGetJSON(url).then(function(responseData) {
-          //console.log("Issue: " + issueKey + " Loaded!");
           $.each(responseData.field, function(key, value) {
             // add fields with field names
             var fieldName = value.name.toCamelCase();
-            //console.log("add new field: " + newFieldId + " with value from " + fieldName);
             responseData.field[fieldName] = value.value;
           });
           return responseData;
@@ -847,8 +829,6 @@
       module.getIssueData = function(issueKey) {
         //http://www.pivotaltracker.com/help/api
         var url = 'https://www.pivotaltracker.com/services/v5/stories/' + issueKey + "?fields=name,kind,description,story_type,owned_by(name),comments(file_attachments(kind)),estimate,deadline";
-        console.log("IssueUrl: " + url);
-        //console.log("Issue: " + issueKey + " Loading...");
         return httpGetJSON(url);
       };
 
@@ -903,8 +883,6 @@
 
       module.getIssueData = function(issueKey) {
         var url = "/1/cards/" + issueKey + "?members=true";
-        console.log("IssueUrl: " + url);
-        //console.log("Issue: " + issueKey + " Loading...");
         return httpGetJSON(url);
       };
 
@@ -976,8 +954,6 @@
         var project = issueKeySplit[0];
         var number = issueKeySplit[1];
         var url = "/api/v2/projects/" + project + "/cards/" + number + ".xml";
-        console.log("IssueUrl: " + url);
-        //console.log("Issue: " + issueKey + " Loading...");
         return httpGet(url);
       };
 
@@ -987,38 +963,6 @@
 
     return issueTrackers;
   }
-
-  //############################################################################################################################
-  //############################################################################################################################
-  //############################################################################################################################
-
-  function initGoogleAnalytics() {
-    if (global.isDev) {
-      this.ga = function(){ console.log("GoogleAnalytics: " + Object.keys(arguments).map(key => arguments[key]))}
-      return;
-    }
-    // <GoogleAnalytics>
-    (function(i, s, o, g, r, a, m) {
-      i['GoogleAnalyticsObject'] = r;
-      i[r] = i[r] || function() {
-        (i[r].q = i[r].q || []).push(arguments)
-      }, i[r].l = 1 * new Date();
-      a = s.createElement(o),
-        m = s.getElementsByTagName(o)[0];
-      a.async = 1;
-      a.src = g;
-      m.parentNode.insertBefore(a, m)
-    })(window, document, 'script', '//www.google-analytics.com/analytics.js', 'ga');
-
-    ga('create', 'UA-50840116-3', {
-      'alwaysSendReferrer': true
-    });
-    ga('set', 'page', '/cardprinter');
-  }
-
-  //############################################################################################################################
-  //############################################################################################################################
-  //############################################################################################################################
 
   function parseBool(text, def){
     if(text == 'true') return true;
@@ -1216,7 +1160,7 @@
          width: 100%;
          border-style: solid;
          border-bottom-width: 0.5rem;
-         border-image: url(https://rawgit.com/qoomon/Jira-Issue-Card-Printer/develop/resources//Tearing.png);
+         border-image: url(https://rawgit.com/tobi-sh/Jira-Issue-Card-Printer/develop/resources//Tearing.png);
          border-image-width: 0 0 0.7rem 0;
          border-image-slice: 56 0 56 1;
          border-image-repeat: round round;
@@ -1347,44 +1291,44 @@
        width: 3.0rem;
        border-radius: 50%;
        background-color: LIGHTSEAGREEN;
-       background-image: url(https://qoomon.github.io/Jira-Issue-Card-Printer/resources/icons/Objects.png);
+       background-image: url(https://tobi-sh.github.io/Jira-Issue-Card-Printer/resources/icons/Objects.png);
        background-repeat: no-repeat;
        background-position: center;
        background-size: 63%;
      }
      .issue-icon[type="loading"]{
        background-color: DEEPSKYBLUE;
-       background-image: url(https://qoomon.github.io/Jira-Issue-Card-Printer/resources/icons/CloudLoading.png);
+       background-image: url(https://tobi-sh.github.io/Jira-Issue-Card-Printer/resources/icons/CloudLoading.png);
      }
      .issue-icon[type="story"], .issue-icon[type="user story"] {
        background-color: GOLD;
-       background-image: url(https://qoomon.github.io/Jira-Issue-Card-Printer/resources/icons/Bulb.png);
+       background-image: url(https://tobi-sh.github.io/Jira-Issue-Card-Printer/resources/icons/Bulb.png);
      }
      .issue-icon[type="bug"], .issue-icon[type="problem"], .issue-icon[type="correction"]  {
        background-color: CRIMSON;
-       background-image: url(https://qoomon.github.io/Jira-Issue-Card-Printer/resources/icons/Bug.png);
+       background-image: url(https://tobi-sh.github.io/Jira-Issue-Card-Printer/resources/icons/Bug.png);
      }
      .issue-icon[type="epic"] {
        background-color: ROYALBLUE;
-       background-image: url(https://qoomon.github.io/Jira-Issue-Card-Printer/resources/icons/Flash.png);
+       background-image: url(https://tobi-sh.github.io/Jira-Issue-Card-Printer/resources/icons/Flash.png);
      }
      .issue-icon[type="task"], .issue-icon[type="sub-task"], .issue-icon[type="technical task"],
      .issue-icon[type="aufgabe"], .issue-icon[type="unteraufgabe"], .issue-icon[type="technische aufgabe"]  {
        background-color: WHEAT;
-       background-image: url(https://qoomon.github.io/Jira-Issue-Card-Printer/resources/icons/Task.png);
+       background-image: url(https://tobi-sh.github.io/Jira-Issue-Card-Printer/resources/icons/Task.png);
      }
      .issue-icon[type="new feature"] {
        background-color: LIMEGREEN;
-       background-image: url(https://qoomon.github.io/Jira-Issue-Card-Printer/resources/icons/Plus.png);
+       background-image: url(https://tobi-sh.github.io/Jira-Issue-Card-Printer/resources/icons/Plus.png);
      }
      .issue-icon[type="improvement"],
      .issue-icon[type="verbesserung"] {
        background-color: CORNFLOWERBLUE;
-       background-image: url(https://qoomon.github.io/Jira-Issue-Card-Printer/resources/icons/Arrow.png);
+       background-image: url(https://tobi-sh.github.io/Jira-Issue-Card-Printer/resources/icons/Arrow.png);
      }
      .issue-icon[type="research"] {
        background-color: MEDIUMTURQUOISE;
-       background-image: url(https://qoomon.github.io/Jira-Issue-Card-Printer/resources/icons/ErlenmeyerFlask.png);
+       background-image: url(https://tobi-sh.github.io/Jira-Issue-Card-Printer/resources/icons/ErlenmeyerFlask.png);
      }
      .issue-icon[type="test"] {
        background-color: ORANGE;
@@ -1422,7 +1366,7 @@
        height: 2.0rem;
        border-radius: 50%;
        background-color: LIGHTSKYBLUE;
-       background-image: url(https://qoomon.github.io/Jira-Issue-Card-Printer/resources/icons/Attachment.png);
+       background-image: url(https://tobi-sh.github.io/Jira-Issue-Card-Printer/resources/icons/Attachment.png);
        background-repeat: no-repeat;
        background-position: center;
        background-size: 70%;
@@ -1500,7 +1444,7 @@
        height: 2.5rem;
        border-radius: 50%;
        background-color: ORCHID;
-       background-image: url(https://qoomon.github.io/Jira-Issue-Card-Printer/resources/icons/AlarmClock.png);
+       background-image: url(https://tobi-sh.github.io/Jira-Issue-Card-Printer/resources/icons/AlarmClock.png);
        background-repeat: no-repeat;
        background-position: center;
        background-size: 65%;
